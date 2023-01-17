@@ -13,4 +13,10 @@ KEYSPACE=""
 
 // Nom de la table
 TABLE_NAME=""
+
+// Utilisateur
+DB_USER=""
+
+// Mot de passe 
+DB_PASS=""
 ```
