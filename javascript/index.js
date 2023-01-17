@@ -3,7 +3,7 @@ env.config();
 
 // Connexion à la base cassandra
 let cassandra = require('cassandra-driver');
-let authProvider = new cassandra.auth.PlainTextAuthProvider('root', 'root');
+let authProvider = new cassandra.auth.PlainTextAuthProvider(process.env.DB_USER, process.env.DB_PASS);
 let contactPoints = ['127.0.0.1:9042', '127.0.0.1:9043', '127.0.0.1:9044'];
 let localDataCenter = 'datacenter1';
 let client = new cassandra.Client({ contactPoints: contactPoints, authProvider: authProvider, localDataCenter: localDataCenter, keyspace: process.env.KEYSPACE });
