@@ -2,6 +2,7 @@
 .idea
 
 /javascript/node_modules
+/javascript/.env
 
 # Exclude the local part of mounting volumes
 docker-volumes/cassandra-cluster-server-1/*
