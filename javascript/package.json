@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cassandra-driver": "^4.6.4",
-    "chalk": "^5.2.0"
+    "chalk": "^5.2.0",
+    "dotenv": "^16.0.3"
   }
 }
