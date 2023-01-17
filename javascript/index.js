@@ -6,7 +6,7 @@ const cassandra = require('cassandra-driver');
 
 // Connexion à la base
 const client = new cassandra.Client({
-    contactPoints: ['127.0.0.1:9042', '127.0.0.1:9043', '127.0.0.1:9044'],
+    contactPoints: ['127.0.0.1:9042'],
     localDataCenter: 'datacenter1',
     keyspace: process.env.KEYSPACE,
     credentials: { username: process.env.DB_USER, password: process.env.DB_PASS }
