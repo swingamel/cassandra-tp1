@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -65,6 +66,7 @@ func createTable(session *gocql.Session, keyspace string, nameTable string) {
 		name text,
 		email text,
 		dateNaissance date,
+		fullname map<text, text>,
 		supprime boolean
 	);`).Exec()
 
@@ -88,7 +90,9 @@ func insertData(session *gocql.Session, keyspace string, columnFamily string, la
 
 	id, _ := gocql.RandomUUID()
 
-	if err := session.Query(`insert into `+keyspace+`.`+columnFamily+` (id, lastname, name, email, dateNaissance, supprime) values (?, ?, ?, ?, ?, ?)`, id, lastname, name, email, dateNaissance, supprime).Exec(); err != nil {
+	fullname := map[string]string{"name": name, "lastname": lastname}
+
+	if err := session.Query(`insert into `+keyspace+`.`+columnFamily+` (id, lastname, name, email, dateNaissance, supprime, fullname) values (?, ?, ?, ?, ?, ?, ?)`, id, lastname, name, email, dateNaissance, supprime, fullname).Exec(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -100,7 +104,7 @@ func selectData(session *gocql.Session, keyspace string, nameColumn string) {
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
 
-	tbl := table.New("ID", "Prénom", "Nom", "Email", "Date de naissance", "Supprime")
+	tbl := table.New("ID", "Prénom", "Nom", "Email", "Date de naissance", "Nom complet", "Supprime")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
 	var id gocql.UUID
@@ -109,14 +113,21 @@ func selectData(session *gocql.Session, keyspace string, nameColumn string) {
 	var dateNaissance string
 	var email string
 	var supprime bool
+	var fullname map[string]string
 
 	scanner := session.Query(`SELECT * FROM ` + keyspace + `.` + nameColumn).Iter().Scanner()
 	for scanner.Next() {
-		err := scanner.Scan(&id, &dateNaissance, &email, &lastname, &name, &supprime)
+		err := scanner.Scan(&id, &dateNaissance, &email, &fullname, &lastname, &name, &supprime)
 		if err != nil {
 			log.Fatal(err)
 		}
-		tbl.AddRow(id, name, lastname, email, dateNaissance, supprime)
+
+		json, err := json.Marshal(fullname)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		tbl.AddRow(id, name, lastname, email, dateNaissance, string(json), supprime)
 	}
 	tbl.Print()
 	fmt.Println()
