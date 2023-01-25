@@ -2,8 +2,6 @@
 const env = require('dotenv');
 env.config();
 
-const crypto = require('crypto');
-
 const cassandra = require('cassandra-driver');
 
 const name = 'vm';
@@ -30,19 +28,24 @@ listKeyspaces();
  * main() gère la différentes requêtes à effectuer sur la base
  */
 function main() {
+
     // Ajoute le keyspace
     createKeyspace(`${name}_user`);
 
     // Ajoute la table 
     createTable(`${name}_user`, `${name}_cfuser`);
 
+
     // Vide la table
     truncateTable(`${name}_user`, `${name}_cfuser`);
 
+
+
     // Ajout d'un utilisateur
-    createUser(`${name}_user`, `${name}_cfuser`, crypto.randomUUID(), 'Sounalet', 'Alexandre', 'miamo.fr', '2002-02-01', 0);
-    createUser(`${name}_user`, `${name}_cfuser`, crypto.randomUUID(), 'Duchesne', 'Tom', 'tom.feur', '1947-02-17', 0);
-    createUser(`${name}_user`, `${name}_cfuser`, crypto.randomUUID(), 'Sounalet', 'Alexandre', 'miamo.fr', '2002-02-01', 0);
+    /*
+    createUser(`${name}_user`, `${name}_cfuser`, 'Sounalet', 'Alexandre', 'miamo.fr', '2002-02-01', 0);
+    createUser(`${name}_user`, `${name}_cfuser`, 'Duchesne', 'Tom', 'tom.feur', '1947-02-17', 0);*/
+    createUser(`${name}_user`, `${name}_cfuser`, 'Corentin', 'Danvin', {"1" : "cd.fr", "2" : "cd.com"}, 0);
 
     // Listage des utilisateurs
     listColumns(`${name}_user`, `${name}_cfuser`);
@@ -63,7 +66,6 @@ function createKeyspace(keyspace) {
     console.log(`⭐ Keyspace ${keyspace} ajouté à la base`);
 }
 
-
 /**
  * listColumns() liste toutes les colonnes de la table indiquée en paramètres
  */
@@ -82,8 +84,7 @@ async function createTable(keyspace, tableName) {
 		id UUID PRIMARY KEY,
 		lastname text,
 		name text,
-		email text,
-		dateNaissance date,
+		email map <text, text>,
 		supprime boolean
 	);`;
     await client.execute(query);
@@ -96,8 +97,10 @@ async function truncateTable(keyspace, tableName) {
     console.log(`⭐ Table ${tableName} vidée`);
 }
 
-async function createUser(keyspace, columnFamily, id, lastname, name, email, dateNaissance, supprime) {
-    const query = `insert into ${keyspace}.${columnFamily} (id, lastname, name, email, dateNaissance, supprime) values (?, ?, ?, ?, ?, ?)`;
-    await client.execute(query, [id, lastname, name, email, dateNaissance, supprime]);
+async function createUser(keyspace, columnFamily, lastname, name, email, supprime) {
+    const query = `insert into ${keyspace}.${columnFamily} (id, lastname, name, email, supprime) values (uuid(), ?, ?, ?, ?)`;
+
+
+    await client.execute(query, [lastname, name, email, supprime]);
     console.log(`⭐ Utilisateur ${name} ajouté à la base ${columnFamily}`);
 }
