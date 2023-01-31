@@ -10,7 +10,7 @@ const name = 'vm';
 // Connexion à la base
 const client = new cassandra.Client({
     contactPoints: ['127.0.0.1:9042'],
-    localDataCenter: 'Mars',
+    localDataCenter: 'datacenter1',
     keyspace: 'system',
     credentials: { username: process.env.DB_USER, password: process.env.DB_PASS }
 });
@@ -28,23 +28,22 @@ listKeyspaces();
 /**
  * main() gère la différentes requêtes à effectuer sur la base
  */
-
 async function main() {
 
     // Ajoute le keyspace
     await createKeyspace(`${name}_user`);
 
+    // Suppression de la table 
+    // (utile pour ceux qui avaient déjà une ancienne version de la table, qui n'avait pas la même structure ce qui provoquait un crash)
+    await dropTable(`${name}_user`, `${name}_cfuser`);
+
     // Ajoute la table 
     await createTable(`${name}_user`, `${name}_cfuser`);
-
 
     // Vide la table
     await truncateTable(`${name}_user`, `${name}_cfuser`);
 
-
-
     // Ajout d'un utilisateur
-
     // promise.all pour attendre le resulat de toutes les promesse a l'interieur du tableau
     await Promise.all([
         createUser(`${name}_user`, `${name}_cfuser`, crypto.randomUUID(), 'Sounalet', 'Alexandre', 'miamo.fr', '2002-02-01', 0),
@@ -55,7 +54,6 @@ async function main() {
     // Listage des utilisateurs
     await listColumns(`${name}_user`, `${name}_cfuser`);
 
-    
 }
 main();
 
@@ -101,12 +99,17 @@ async function createTable(keyspace, tableName) {
     console.log(`⭐ Table ${tableName} ajoutée à la base`);
 }
 
+async function dropTable(keyspace, tableName) {
+    const query = `DROP TABLE IF EXISTS ${keyspace}.${tableName};`;
+    await client.execute(query);
+    console.log(`⭐ Table ${tableName} a bien été supprimé`);
+}
+
 async function truncateTable(keyspace, tableName) {
     const query = `TRUNCATE ${keyspace}.${tableName}`;
     await client.execute(query);
     console.log(`⭐ Table ${tableName} vidée`);
 }
-
 
 async function createUser(keyspace, columnFamily, id, lastname, name, email, dateNaissance, supprime) {
     let fullname = {"name": name, "lastname": lastname}
