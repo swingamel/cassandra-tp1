@@ -24,7 +24,6 @@ async function listKeyspaces() {
 }
 listKeyspaces();
 
-
 /**
  * main() gère la différentes requêtes à effectuer sur la base
  */
@@ -99,18 +98,39 @@ async function createTable(keyspace, tableName) {
     console.log(`⭐ Table ${tableName} ajoutée à la base`);
 }
 
+/**
+ * dropTable() supprime une table dans la base à partir d'un keyspace et d'un nom de table
+ * @param {String} keyspace Nom du keyspace existant
+ * @param {String} tablename Nom de la table à supprimer
+ */
 async function dropTable(keyspace, tableName) {
     const query = `DROP TABLE IF EXISTS ${keyspace}.${tableName};`;
     await client.execute(query);
     console.log(`⭐ Table ${tableName} a bien été supprimé`);
 }
 
+/**
+ * truncateTable() supprime toutes les données d'une table à partir d'un keyspace et d'un nom de table
+ * @param {String} keyspace Nom du keyspace existant
+ * @param {String} tablename Nom de la table à vider
+ */
 async function truncateTable(keyspace, tableName) {
     const query = `TRUNCATE ${keyspace}.${tableName}`;
     await client.execute(query);
     console.log(`⭐ Table ${tableName} vidée`);
 }
 
+/**
+ * createUser() ajoute un utilisateur en fonction d'un keyspace, d'une table et des données de l'utilisateur
+ * @param {String} keyspace Nom du keyspace existant
+ * @param {String} columnFamily Nom de la table dans laquelle insérer l'utilisateur
+ * @param {String} id Id de l'utilisateur
+ * @param {String} lastname Nom de famille de l'utilisateur
+ * @param {String} name Prénom de l'utilisateur
+ * @param {String} email Email de l'utilisateur
+ * @param {String} dateNaissance Date de naissance de l'utilisateur
+ * @param {int} supprime Indicateur de suppression de l'utilisateur
+ */
 async function createUser(keyspace, columnFamily, id, lastname, name, email, dateNaissance, supprime) {
     let fullname = {"name": name, "lastname": lastname}
 
