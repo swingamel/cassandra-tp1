@@ -42,14 +42,13 @@ function main() {
 
 
     // Ajout d'un utilisateur
-    /*
-    createUser(`${name}_user`, `${name}_cfuser`, 'Sounalet', 'Alexandre', 'miamo.fr', '2002-02-01', 0);
-    createUser(`${name}_user`, `${name}_cfuser`, 'Duchesne', 'Tom', 'tom.feur', '1947-02-17', 0);*/
+    
+    createUser(`${name}_user`, `${name}_cfuser`, 'Sounalet', 'Alexandre', {"1" : "miamo.fr", "2" : "miamo.fr"}, 0);
+    createUser(`${name}_user`, `${name}_cfuser`, 'Duchesne', 'Tom', {"1" : "tom.feur", "2" : "tom.quoi"}, 0);
     createUser(`${name}_user`, `${name}_cfuser`, 'Corentin', 'Danvin', {"1" : "cd.fr", "2" : "cd.com"}, 0);
 
     // Listage des utilisateurs
     listColumns(`${name}_user`, `${name}_cfuser`);
-
 }
 main();
 
@@ -98,9 +97,12 @@ async function truncateTable(keyspace, tableName) {
 }
 
 async function createUser(keyspace, columnFamily, lastname, name, email, supprime) {
+   /* const query = `insert into ${keyspace}.${columnFamily} (id, lastname, name, email, supprime) values (uuid(), ?, ?, ?, ?)`;
+    await client.execute(query, [lastname, name, email, supprime]);
+    console.log(`⭐ Utilisateur ${name} ajouté à la base ${columnFamily}`);*/
+
     const query = `insert into ${keyspace}.${columnFamily} (id, lastname, name, email, supprime) values (uuid(), ?, ?, ?, ?)`;
 
-
-    await client.execute(query, [lastname, name, email, supprime]);
+    await client.execute(query, [lastname, name, email, supprime], {prepare : true});
     console.log(`⭐ Utilisateur ${name} ajouté à la base ${columnFamily}`);
 }
