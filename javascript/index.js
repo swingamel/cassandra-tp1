@@ -9,7 +9,7 @@ const name = 'vm';
 // Connexion à la base
 const client = new cassandra.Client({
     contactPoints: ['127.0.0.1:9042'],
-    localDataCenter: 'datacenter1',
+    localDataCenter: 'Mars',
     keyspace: 'system',
     credentials: { username: process.env.DB_USER, password: process.env.DB_PASS }
 });
@@ -27,28 +27,34 @@ listKeyspaces();
 /**
  * main() gère la différentes requêtes à effectuer sur la base
  */
-function main() {
+
+async function main() {
 
     // Ajoute le keyspace
-    createKeyspace(`${name}_user`);
+    await createKeyspace(`${name}_user`);
 
     // Ajoute la table 
-    createTable(`${name}_user`, `${name}_cfuser`);
+    await createTable(`${name}_user`, `${name}_cfuser`);
 
 
     // Vide la table
-    truncateTable(`${name}_user`, `${name}_cfuser`);
+    await truncateTable(`${name}_user`, `${name}_cfuser`);
 
 
 
     // Ajout d'un utilisateur
-    
-    createUser(`${name}_user`, `${name}_cfuser`, 'Sounalet', 'Alexandre', {"1" : "miamo.fr", "2" : "miamo.fr"}, 0);
-    createUser(`${name}_user`, `${name}_cfuser`, 'Duchesne', 'Tom', {"1" : "tom.feur", "2" : "tom.quoi"}, 0);
-    createUser(`${name}_user`, `${name}_cfuser`, 'Corentin', 'Danvin', {"1" : "cd.fr", "2" : "cd.com"}, 0);
+
+    // promise.all pour attendre le resulat de toutes les promesse a l'interieur du tableau
+    await Promise.all([
+        createUser(`${name}_user`, `${name}_cfuser`, crypto.randomUUID(), 'Sounalet', 'Alexandre', 'miamo.fr', '2002-02-01', 0),
+        createUser(`${name}_user`, `${name}_cfuser`, crypto.randomUUID(), 'Duchesne', 'Tom', 'tom.feur', '1947-02-17', 0),
+        createUser(`${name}_user`, `${name}_cfuser`, crypto.randomUUID(), 'Sounalet', 'Alexandre', 'miamo.fr', '2002-02-01', 0)
+    ])
 
     // Listage des utilisateurs
-    listColumns(`${name}_user`, `${name}_cfuser`);
+    await listColumns(`${name}_user`, `${name}_cfuser`);
+
+    
 }
 main();
 
@@ -56,8 +62,8 @@ main();
  * createKeyspace() ajoute à la base de données un keyspace à partir d'un nom donné
  * @param {String} keyspace
  */
-function createKeyspace(keyspace) {
-    client.execute(`CREATE KEYSPACE IF NOT EXISTS ${keyspace}
+async function createKeyspace(keyspace) {
+    await client.execute(`CREATE KEYSPACE IF NOT EXISTS ${keyspace}
     WITH replication = {
         'class' : 'SimpleStrategy',
         'replication_factor' : 3
@@ -68,9 +74,11 @@ function createKeyspace(keyspace) {
 /**
  * listColumns() liste toutes les colonnes de la table indiquée en paramètres
  */
-function listColumns(keyspace, table) {
+async function listColumns(keyspace, table) {
     const query = `SELECT * FROM ${keyspace}.${table}`;
-    client.execute(query, []).then(result => console.table(result.rows));
+    const result = await client.execute(query, [])
+    console.table(result.rows.map(row => ({...row, id: row.id.toString(), datenaissance: row.datenaissance.toString() })));
+    client.shutdown();
 }
 
 /**
@@ -83,8 +91,10 @@ async function createTable(keyspace, tableName) {
 		id UUID PRIMARY KEY,
 		lastname text,
 		name text,
-		email map <text, text>,
-		supprime boolean
+		email text,
+		dateNaissance date,
+		fullname map<text, text>,
+		supprime boolean,
 	);`;
     await client.execute(query);
     console.log(`⭐ Table ${tableName} ajoutée à la base`);
@@ -96,13 +106,12 @@ async function truncateTable(keyspace, tableName) {
     console.log(`⭐ Table ${tableName} vidée`);
 }
 
-async function createUser(keyspace, columnFamily, lastname, name, email, supprime) {
-   /* const query = `insert into ${keyspace}.${columnFamily} (id, lastname, name, email, supprime) values (uuid(), ?, ?, ?, ?)`;
-    await client.execute(query, [lastname, name, email, supprime]);
-    console.log(`⭐ Utilisateur ${name} ajouté à la base ${columnFamily}`);*/
 
-    const query = `insert into ${keyspace}.${columnFamily} (id, lastname, name, email, supprime) values (uuid(), ?, ?, ?, ?)`;
+async function createUser(keyspace, columnFamily, id, lastname, name, email, dateNaissance, supprime) {
+    let fullname = {"name": name, "lastname": lastname}
 
-    await client.execute(query, [lastname, name, email, supprime], {prepare : true});
+    const query = `insert into ${keyspace}.${columnFamily} (id, lastname, name, email, dateNaissance, fullname, supprime) values (?, ?, ?, ?, ?, ?, ?)`;
+    await client.execute(query, [id, lastname, name, email, dateNaissance, fullname, supprime], {prepare: true});
+
     console.log(`⭐ Utilisateur ${name} ajouté à la base ${columnFamily}`);
 }
