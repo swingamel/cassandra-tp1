@@ -1,5 +1,6 @@
 // .env
 const env = require('dotenv');
+const crypto = require('crypto')
 env.config();
 
 const cassandra = require('cassandra-driver');
