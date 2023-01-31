@@ -4,10 +4,10 @@ from prettytable import PrettyTable
 from colorama import Fore, Back, Style, init
 init()
 
-name = "AB"
+name = "vm"
 
 def main():
-    cluster = Cluster(['127.0.0.1'], port=9045)
+    cluster = Cluster(['127.0.0.1'], port=9042)
     session = cluster.connect('system')
 
 	# Create a keyspace
@@ -35,19 +35,19 @@ def createKeyspace(session, keyspace):
     session.execute("""
     CREATE KEYSPACE IF NOT EXISTS %s WITH replication = {
         'class' : 'SimpleStrategy',
-        'replication_factor' : 1
+        'replication_factor' : 3
     }"""%(keyspace))
-    print("\n" + "📦 The " + keyspace + " keyspace has been created")
+    print("\n" + " The " + keyspace + " keyspace has been created")
 
 def createTable(session, keyspace, columnFamily):
     session.execute("CREATE TABLE IF NOT EXISTS %s.%s ( id UUID PRIMARY KEY, lastname text,	name text,	email text,	dateNaissance date,	supprime boolean, fullname map<text, text>);"%(keyspace, columnFamily))
 
-    print("\n" + "📁 The " + columnFamily + " table has been created ")
+    print("\n" + " The " + columnFamily + " table has been created ")
 
 def truncateTable(session, keyspace, columnFamily):
     session.execute("TRUNCATE %s.%s"%(keyspace, columnFamily))
 
-    print("\n" + "🚫 The " + columnFamily + " table has been emptied ")
+    print("\n" + " The " + columnFamily + " table has been emptied ")
 
 def insertData(session, keyspace, columnFamily, lastname, name, email, dateNaissance, supprime):
     id = str(uuid4()) 
@@ -55,7 +55,7 @@ def insertData(session, keyspace, columnFamily, lastname, name, email, dateNaiss
     session.execute("insert into "+keyspace+"."+columnFamily+" (id, lastname, name, email, dateNaissance, supprime, fullname) values (%s, '%s', '%s', '%s', '%s', %s, {'name': '%s', 'lastname': '%s'})"%(id, lastname, name, email, dateNaissance, supprime, name, lastname))
 
 
-    print("➕ A user has been added (" + id + ")")
+    print(" A user has been added (" + id + ")")
 
 def selectData(session, keyspace, columnFamily):
     rows = session.execute("SELECT * FROM %s.%s"%(keyspace, columnFamily))
@@ -69,6 +69,7 @@ def selectData(session, keyspace, columnFamily):
         Fore.CYAN+'supprime'+ Style.RESET_ALL])
     for row in rows:
         table.add_row([row.id, row.lastname, row.name, row.email, row.datenaissance, row.fullname, row.supprime])
+        print(type(row.fullname))
     
     print(table)
 
