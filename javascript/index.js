@@ -2,8 +2,6 @@
 const env = require('dotenv');
 env.config();
 
-const crypto = require('crypto');
-
 const cassandra = require('cassandra-driver');
 
 const name = 'vm';
@@ -29,17 +27,23 @@ listKeyspaces();
 /**
  * main() gère la différentes requêtes à effectuer sur la base
  */
+
 async function main() {
+
     // Ajoute le keyspace
     await createKeyspace(`${name}_user`);
 
     // Ajoute la table 
     await createTable(`${name}_user`, `${name}_cfuser`);
 
+
     // Vide la table
     await truncateTable(`${name}_user`, `${name}_cfuser`);
 
+
+
     // Ajout d'un utilisateur
+
     // promise.all pour attendre le resulat de toutes les promesse a l'interieur du tableau
     await Promise.all([
         createUser(`${name}_user`, `${name}_cfuser`, crypto.randomUUID(), 'Sounalet', 'Alexandre', 'miamo.fr', '2002-02-01', 0),
@@ -66,7 +70,6 @@ async function createKeyspace(keyspace) {
     }`);
     console.log(`⭐ Keyspace ${keyspace} ajouté à la base`);
 }
-
 
 /**
  * listColumns() liste toutes les colonnes de la table indiquée en paramètres
@@ -103,10 +106,12 @@ async function truncateTable(keyspace, tableName) {
     console.log(`⭐ Table ${tableName} vidée`);
 }
 
+
 async function createUser(keyspace, columnFamily, id, lastname, name, email, dateNaissance, supprime) {
     let fullname = {"name": name, "lastname": lastname}
 
     const query = `insert into ${keyspace}.${columnFamily} (id, lastname, name, email, dateNaissance, fullname, supprime) values (?, ?, ?, ?, ?, ?, ?)`;
     await client.execute(query, [id, lastname, name, email, dateNaissance, fullname, supprime], {prepare: true});
+
     console.log(`⭐ Utilisateur ${name} ajouté à la base ${columnFamily}`);
 }
